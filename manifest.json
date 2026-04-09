@@ -1,0 +1,36 @@
+{
+  "name": "Mono Planner",
+  "short_name": "Mono Planner",
+  "description": "개인용 주간/일간 To-Do 다이어리 웹앱",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "lang": "ko",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "오늘 할 일",
+      "short_name": "오늘",
+      "description": "오늘 날짜로 바로 이동",
+      "url": "./index.html"
+    }
+  ]
+}

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mono Planner">
+  <meta name="theme-color" id="meta-theme-color" content="#ffffff">
+  <title>Mono Planner</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===================== HEADER ===================== -->
+  <header id="app-header">
+    <div class="header-left">
+      <span class="app-logo">■</span>
+      <h1 class="app-title">Mono Planner</h1>
+      <nav class="week-nav" aria-label="주 탐색">
+        <button id="btn-prev-week" class="icon-btn" aria-label="이전 주">&#8249;</button>
+        <span id="current-week-label" class="week-label-btn">--</span>
+        <button id="btn-next-week" class="icon-btn" aria-label="다음 주">&#8250;</button>
+        <button id="btn-today" class="btn-sm">오늘</button>
+        <button id="btn-view-monthly" class="btn-sm btn-view-toggle" title="월간 달력 보기">월간</button>
+      </nav>
+    </div>
+    <div class="header-right">
+      <div class="search-wrapper">
+        <input type="search" id="search-input" placeholder="검색..." autocomplete="off" aria-label="할 일 검색">
+        <button id="btn-search-clear" class="icon-btn search-clear hidden" aria-label="검색 지우기">&#10005;</button>
+      </div>
+      <button id="btn-carryover" class="btn-action" title="미완료 업무를 다음 주로 이월">이월</button>
+      <button id="btn-export" class="btn-action" title="데이터를 JSON 파일로 백업">백업</button>
+      <button id="btn-import" class="btn-action" title="JSON 파일에서 데이터 복원">복원</button>
+      <button id="btn-theme" class="icon-btn theme-btn" aria-label="다크/라이트 모드 전환" title="테마 전환">&#9680;</button>
+    </div>
+  </header>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <section id="dashboard" aria-label="요약 위젯">
+    <div class="widget clickable widget-date" id="w-today-widget" title="오늘 날짜로 이동">
+      <div class="widget-num" id="w-today-date">-</div>
+      <div class="widget-lbl" id="w-today-dow">오늘</div>
+    </div>
+    <div class="widget" id="w-today-done-widget">
+      <div class="widget-num" id="w-today-done">0 / 0</div>
+      <div class="widget-lbl">오늘 완료</div>
+    </div>
+    <div class="widget" id="w-progress-widget">
+      <div class="widget-num" id="w-week-done">0 / 0</div>
+      <div class="widget-lbl">주간 완료</div>
+      <div class="progress-track"><div class="progress-fill" id="w-progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="widget clickable" id="w-co-widget" title="이월 관리 열기">
+      <div class="widget-num" id="w-co-num">0</div>
+      <div class="widget-lbl">이월 예정</div>
+    </div>
+    <div class="widget">
+      <div class="widget-num widget-num-sm" id="w-backup-time">-</div>
+      <div class="widget-lbl">마지막 백업</div>
+    </div>
+  </section>
+
+
+  <!-- ===================== SECTION TITLE ===================== -->
+  <div id="todo-section-title">
+    <span>To-Do List</span>
+  </div>
+
+  <!-- ===================== MONTHLY VIEW ===================== -->
+  <div id="view-monthly" class="hidden" aria-label="월간 달력"></div>
+
+  <!-- ===================== MAIN LAYOUT ===================== -->
+  <main id="main-layout">
+
+    <!-- LEFT: Weekly Panel -->
+    <section id="panel-weekly" class="panel" data-tab="weekly">
+      <div class="panel-header">
+        <h2>주간 To-Do</h2>
+        <button class="btn-add" id="btn-add-weekly" title="주간 업무 추가">+ 추가</button>
+      </div>
+      <div id="weekly-todo-list" class="todo-list" role="list" aria-label="주간 할 일 목록"></div>
+      <div class="note-section">
+        <h3 class="note-heading">주간 메모</h3>
+        <textarea id="weekly-note" class="note-textarea" placeholder="이번 주 메모를 입력하세요..."></textarea>
+        <span class="note-time" id="weekly-note-time"></span>
+      </div>
+    </section>
+
+    <!-- CENTER: Daily Panel -->
+    <section id="panel-daily" class="panel" data-tab="daily">
+      <div class="panel-header">
+        <h2>일간 To-Do</h2>
+        <span class="panel-subinfo" id="daily-week-range"></span>
+      </div>
+      <div id="daily-container"></div>
+    </section>
+
+    <!-- RIGHT: Daily Note Panel -->
+    <section id="panel-detail" class="panel" data-tab="detail">
+      <div class="panel-header">
+        <h2 id="detail-heading">날짜를 선택하세요</h2>
+        <span class="note-time" id="daily-note-time"></span>
+      </div>
+      <div id="detail-body">
+        <div class="input-toolbar">
+          <button type="button" class="tool-btn" id="btn-daily-note-newline" title="줄바꿈 삽입">↵ 줄바꿈</button>
+          <button type="button" class="tool-btn" id="btn-daily-note-backspace" title="한 글자 지우기">⌫ 지우기</button>
+          <button type="button" class="tool-btn" id="btn-daily-note-space" title="스페이스 삽입">␣ 스페이스</button>
+        </div>
+        <textarea id="daily-note" class="daily-note-full" placeholder="날짜를 선택하면 메모를 입력할 수 있습니다." disabled></textarea>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===================== BOTTOM PANELS ===================== -->
+  <div id="bottom-panels">
+    <section id="panel-history" class="bottom-panel" data-tab="history">
+      <div class="bottom-panel-header" id="btn-toggle-history" role="button" tabindex="0" aria-expanded="false">
+        <h2>히스토리 (이전 주 보기)</h2>
+        <span class="toggle-arrow" aria-hidden="true">&#9660;</span>
+      </div>
+      <div id="history-body" class="bottom-panel-body collapsed">
+        <div id="history-week-nav" class="history-week-nav"></div>
+        <div id="history-viewer" class="history-viewer"></div>
+      </div>
+    </section>
+    <section id="panel-trash" class="bottom-panel">
+      <div class="bottom-panel-header" id="btn-toggle-trash" role="button" tabindex="0" aria-expanded="false">
+        <h2>최근 삭제 항목 (휴지통)</h2>
+        <span class="toggle-arrow" aria-hidden="true">&#9660;</span>
+      </div>
+      <div id="trash-body" class="bottom-panel-body collapsed">
+        <div id="trash-list"></div>
+        <p id="trash-empty" class="empty-msg" style="display:none">삭제된 항목이 없습니다.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================== MOBILE BOTTOM NAV ===================== -->
+  <nav id="mobile-nav" aria-label="모바일 탭 네비게이션">
+    <button class="mobile-tab active" data-tab="weekly">주간</button>
+    <button class="mobile-tab" data-tab="daily">일간</button>
+    <button class="mobile-tab" data-tab="detail">메모</button>
+    <button class="mobile-tab" data-tab="history">히스토리</button>
+  </nav>
+
+  <!-- ===================== MODALS ===================== -->
+
+  <!-- Weekly Task Modal (기존 주간 업무용) -->
+  <div id="modal-task" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-task-title">
+    <div class="modal-backdrop" data-modal-close="task"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-task-title">업무 추가</h3>
+        <button class="modal-close-btn" data-modal-close="task" aria-label="닫기">&#10005;</button>
+      </div>
+      <div class="form-group">
+        <label for="task-category-select">분류</label>
+        <select id="task-category-select">
+          <option value="">선택 안함</option>
+          <option value="업무">업무</option>
+          <option value="약속">약속</option>
+          <option value="회의">회의</option>
+          <option value="일정">일정</option>
+          <option value="자료">자료</option>
+          <option value="개인">개인</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="task-text-input">내용 <span class="required">*</span></label>
+        <input type="text" id="task-text-input" placeholder="업무 내용을 입력하세요" autocomplete="off">
+      </div>
+      <div class="form-group" id="link-weekly-group" style="display:none">
+        <label for="link-weekly-select">주간 업무 연결 (선택)</label>
+        <select id="link-weekly-select"><option value="">연결 안함</option></select>
+      </div>
+      <div class="form-group">
+        <label for="task-requester-input">요청자 <span class="hint">(선택)</span></label>
+        <input type="text" id="task-requester-input" placeholder="요청자 이름을 입력하세요" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="task-memo-input">메모</label>
+        <div class="input-toolbar">
+          <button type="button" class="tool-btn" id="btn-task-memo-newline" title="줄바꿈 삽입">↵ 줄바꿈</button>
+          <button type="button" class="tool-btn" id="btn-task-memo-backspace" title="한 글자 지우기">⌫ 지우기</button>
+          <button type="button" class="tool-btn" id="btn-task-memo-space" title="스페이스 삽입">␣ 스페이스</button>
+        </div>
+        <textarea id="task-memo-input" placeholder="상세 메모를 입력하세요..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-task-save" class="btn-primary">저장</button>
+        <button class="btn-secondary" data-modal-close="task">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ Daily Task Modal (일간 업무 전용 확장 팝업) -->
+  <div id="modal-daily-task" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-dt-title">
+    <div class="modal-backdrop" data-modal-close="daily-task"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h3 id="modal-dt-title">일간 업무 추가</h3>
+          <span id="modal-dt-date" class="modal-date-label"></span>
+        </div>
+        <button class="modal-close-btn" data-modal-close="daily-task" aria-label="닫기">&#10005;</button>
+      </div>
+
+      <!-- 업무 기본 정보 -->
+      <div class="form-group">
+        <label for="dt-category-select">분류</label>
+        <select id="dt-category-select">
+          <option value="">선택 안함</option>
+          <option value="업무">업무</option>
+          <option value="약속">약속</option>
+          <option value="회의">회의</option>
+          <option value="일정">일정</option>
+          <option value="자료">자료</option>
+          <option value="개인">개인</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="dt-text-input">업무명 <span class="required">*</span></label>
+        <div class="input-toolbar">
+          <button type="button" class="tool-btn" id="btn-dt-newline" title="줄바꿈 삽입">↵ 줄바꿈</button>
+          <button type="button" class="tool-btn" id="btn-dt-backspace" title="한 글자 지우기">⌫ 지우기</button>
+          <button type="button" class="tool-btn" id="btn-dt-space" title="스페이스 삽입">␣ 스페이스</button>
+        </div>
+        <textarea id="dt-text-input" rows="2" placeholder="업무 내용을 입력하세요" autocomplete="off"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="dt-link-weekly-select">주간 업무 연결 <span class="hint">(선택)</span></label>
+        <select id="dt-link-weekly-select"><option value="">연결 안함</option></select>
+      </div>
+      <div class="form-group">
+        <label for="dt-requester-input">요청자 <span class="hint">(선택)</span></label>
+        <input type="text" id="dt-requester-input" placeholder="요청자 이름을 입력하세요" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>월간 표시 색상</label>
+        <div class="color-chip-group" id="dt-color-group">
+          <button type="button" class="color-chip active" data-color="" style="background:var(--accent)" title="기본"></button>
+          <button type="button" class="color-chip" data-color="#e53e3e" style="background:#e53e3e" title="빨강"></button>
+          <button type="button" class="color-chip" data-color="#dd6b20" style="background:#dd6b20" title="주황"></button>
+          <button type="button" class="color-chip" data-color="#d69e2e" style="background:#d69e2e" title="노랑"></button>
+          <button type="button" class="color-chip" data-color="#38a169" style="background:#38a169" title="초록"></button>
+          <button type="button" class="color-chip" data-color="#3182ce" style="background:#3182ce" title="파랑"></button>
+          <button type="button" class="color-chip" data-color="#805ad5" style="background:#805ad5" title="보라"></button>
+        </div>
+      </div>
+
+      <!-- 메모 연결 섹션 -->
+      <div class="form-divider">
+        <span>필기 노트 연결</span>
+      </div>
+      <div class="form-group dt-memo-toggles">
+        <label class="toggle-check-label">
+          <input type="checkbox" id="dt-create-memo" checked>
+          <span>필기 노트 같이 만들기</span>
+        </label>
+      </div>
+
+      <!-- 기존 연결 메모 표시 (편집 시) -->
+      <div id="dt-existing-memo-section" style="display:none">
+        <div class="form-divider">연결된 필기 노트</div>
+        <div id="dt-existing-memo-info" class="dt-existing-memo-info"></div>
+      </div>
+
+      <div class="modal-footer dt-footer">
+        <div class="dt-footer-left">
+          <button id="btn-dt-save" class="btn-primary">저장</button>
+          <button id="btn-dt-save-open" class="btn-primary-alt">저장하고 노트 열기</button>
+        </div>
+        <button class="btn-secondary" data-modal-close="daily-task">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ Memo Edit Modal (메모 편집 팝업) -->
+  <div id="modal-memo" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="memo-modal-title">
+    <div class="modal-backdrop" data-modal-close="memo"></div>
+    <div class="modal-box modal-memo-box">
+      <div class="modal-header memo-modal-header">
+        <div class="memo-modal-header-left">
+          <span class="memo-type-badge" id="memo-modal-type-badge">메모</span>
+          <input type="text" id="memo-modal-title-input" class="memo-title-edit" placeholder="메모 제목..." aria-label="메모 제목">
+        </div>
+        <div class="memo-modal-header-right">
+          <span class="note-time" id="memo-modal-saved-time"></span>
+          <button class="modal-close-btn" data-modal-close="memo" aria-label="닫기">&#10005;</button>
+        </div>
+      </div>
+      <!-- 연결된 업무 표시 -->
+      <div id="memo-modal-linked-task" class="memo-linked-task" style="display:none">
+        <span class="memo-linked-task-label">연결된 업무</span>
+        <span class="memo-linked-task-text" id="memo-modal-linked-task-text"></span>
+      </div>
+      <!-- 메모 본문 -->
+      <div class="memo-modal-body">
+        <div id="memo-text-section">
+          <div class="memo-text-toolbar">
+            <button type="button" id="btn-memo-newline" class="tool-btn" title="줄바꿈 삽입">↵ 줄바꿈</button>
+            <button type="button" id="btn-memo-backspace" class="tool-btn" title="한 글자 지우기">⌫ 지우기</button>
+            <button type="button" id="btn-memo-space" class="tool-btn" title="스페이스 삽입">␣ 스페이스</button>
+          </div>
+          <textarea id="memo-modal-text" class="memo-text-editor" placeholder="메모 내용을 입력하세요...&#10;&#10;마크다운 형식으로 자유롭게 작성하세요."></textarea>
+        </div>
+        <!-- 필기 캔버스 (필기장 포함 시) -->
+        <div id="memo-drawing-section" class="memo-drawing-section" style="display:none">
+          <div class="drawing-header">
+            <h3 class="note-heading">필기</h3>
+            <div class="drawing-tools">
+              <button class="tool-btn active" id="memo-tool-pen">펜</button>
+              <button class="tool-btn" id="memo-tool-eraser">지우개</button>
+              <select id="memo-pen-color" aria-label="메모 펜 색상">
+                <option value="auto">자동</option>
+                <option value="#111111">검정</option>
+                <option value="#666666">회색</option>
+                <option value="#ffffff">흰색</option>
+                <option value="#cc3333">빨강</option>
+                <option value="#3355cc">파랑</option>
+                <option value="#339944">초록</option>
+              </select>
+              <select id="memo-pen-size" aria-label="메모 펜 굵기">
+                <option value="1.5">얇게</option>
+                <option value="3" selected>보통</option>
+                <option value="6">굵게</option>
+                <option value="12">아주 굵게</option>
+              </select>
+              <button class="tool-btn tool-btn-danger" id="memo-tool-clear">전체 지우기</button>
+            </div>
+          </div>
+          <div class="canvas-wrapper" id="memo-canvas-wrapper">
+            <canvas id="memo-drawing-canvas" aria-label="메모 필기 캔버스"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-memo-save" class="btn-primary">저장</button>
+        <button class="btn-secondary" data-modal-close="memo">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="modal-confirm" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box modal-sm">
+      <div class="modal-header">
+        <h3 id="confirm-title">확인</h3>
+      </div>
+      <p id="confirm-body" style="margin: 1rem 0;"></p>
+      <div class="modal-footer">
+        <button id="btn-confirm-ok" class="btn-primary">확인</button>
+        <button id="btn-confirm-cancel" class="btn-secondary">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Modal -->
+  <div id="modal-export" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" data-modal-close="export"></div>
+    <div class="modal-box modal-sm">
+      <div class="modal-header">
+        <h3>백업 내보내기</h3>
+        <button class="modal-close-btn" data-modal-close="export" aria-label="닫기">&#10005;</button>
+      </div>
+      <div id="export-info" style="margin:1rem 0;padding:1rem;background:var(--bg2);border-radius:var(--radius);"></div>
+      <div class="modal-footer">
+        <button id="btn-export-confirm" class="btn-primary">JSON 파일 다운로드</button>
+        <button class="btn-secondary" data-modal-close="export">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Modal -->
+  <div id="modal-import" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" data-modal-close="import"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>백업 불러오기</h3>
+        <button class="modal-close-btn" data-modal-close="import" aria-label="닫기">&#10005;</button>
+      </div>
+      <div class="form-group">
+        <label for="import-file-input">백업 파일 선택 (.json)</label>
+        <input type="file" id="import-file-input" accept=".json">
+      </div>
+      <div id="import-preview" style="display:none;margin:0.75rem 0;padding:0.75rem;background:var(--bg2);border-radius:var(--radius);font-size:0.85rem;"></div>
+      <div class="form-group" id="import-mode-group" style="display:none">
+        <label>불러오기 방식</label>
+        <div class="priority-group">
+          <button class="import-mode-btn active" data-mode="overwrite">덮어쓰기</button>
+          <button class="import-mode-btn" data-mode="merge">병합하기</button>
+        </div>
+        <p class="hint" id="import-mode-hint" style="margin-top:0.5rem;font-size:0.8rem;"></p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-import-confirm" class="btn-primary" disabled>불러오기 실행</button>
+        <button class="btn-secondary" data-modal-close="import">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carry-Over Modal -->
+  <div id="modal-carryover" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" data-modal-close="carryover"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>미완료 업무 이월</h3>
+        <button class="modal-close-btn" data-modal-close="carryover" aria-label="닫기">&#10005;</button>
+      </div>
+      <p id="carryover-info" style="margin:0.5rem 0 1rem;color:var(--text2);font-size:0.9rem;"></p>
+      <div id="carryover-items"></div>
+      <div class="modal-footer">
+        <button id="btn-carryover-confirm" class="btn-primary">선택 항목 이월</button>
+        <button class="btn-secondary" data-modal-close="carryover">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Results Overlay -->
+  <div id="search-overlay" class="hidden" role="dialog" aria-label="검색 결과">
+    <div id="search-overlay-inner">
+      <div class="search-overlay-header">
+        <span id="search-result-info"></span>
+        <button id="btn-close-search" class="btn-sm">닫기</button>
+      </div>
+      <div id="search-results-list"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
